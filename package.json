@@ -20,8 +20,16 @@
                 "title": "Timer: Play Sound"
             },
             {
-                "command": "timer.startTimer",
+                "command": "timer.start",
                 "title": "Timer: Start"
+            },
+            {
+                "command": "timer.pause",
+                "title": "Timer: Pause"
+            },
+            {
+                "command": "timer.reset",
+                "title": "Timer: Reset"
             }
         ]
     },

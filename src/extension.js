@@ -11,57 +11,172 @@ function activate(context) {
     console.log(`dir: ${basePath}`);
 
     const timer = new Timer();
-    disposable.push(timer);
+    // timer.createStatusBarClock();
 
-    disposable.push(
-        vscode.commands.registerCommand("timer.startTimer", function () {
-            vscode.window.showInformationMessage("Timer Started");
-            timer.start();
-        })
-    );
+    const startTimerCmd = vscode.commands.registerCommand("timer.start", () => {
+        vscode.window.showInformationMessage("Timer Started");
+        timer.start();
+    });
 
-    disposable.push(
-        vscode.commands.registerCommand("timer.playSound", function () {
+    const pauseTimerCmd = vscode.commands.registerCommand("timer.pause", () => {
+        vscode.window.showInformationMessage("Timer Paused");
+        timer.pause();
+    });
+
+    const resetTimerCmd = vscode.commands.registerCommand("timer.reset", () => {
+        vscode.window.showInformationMessage("Timer Reset");
+        timer.reset();
+    });
+
+    const playSoundCmd = vscode.commands.registerCommand(
+        "timer.playSound",
+        () => {
             vscode.window.showInformationMessage("Playing Sound");
             player.play(soundFilePath, player.soundSettings).then(() => {
                 console.log("sound has played");
             });
-        })
+        }
     );
 
+    disposable.push(timer, startTimerCmd, playSoundCmd, resetTimerCmd);
     for (const item of disposable) {
         context.subscriptions.push(item);
     }
 }
 
 function Timer() {
-    let isTicking = false;
-    let hasStarted = false;
-    let length = 10;
-    let intervalObj;
-    this.remainingSeconds = length;
+    const state = {
+        isPlaying: false,
+        isPaused: false,
+        isStopped: false,
+        isInProgress: false,
+    };
+
+    const statusBar = {
+        text: undefined,
+        playButton: undefined,
+        pauseButton: undefined,
+        resetButton: undefined,
+    };
+
+    const time = {
+        startingLength: 8,
+        remainingLength: undefined,
+        intervalObject: undefined,
+    };
 
     this.start = () => {
-        if (!hasStarted) {
-            hasStarted = true;
-            intervalObj = setInterval(() => {
-                this.remainingSeconds -= 1;
-                if (this.remainingSeconds <= 0) {
-                    this.stop();
-                }
-                console.log(`tick numSeconds: ${this.remainingSeconds}`);
-            }, 1000);
+        if (!state.isInProgress) {
+            state.isInProgress = true;
+            state.isPlaying = true;
+
+            time.intervalObject = setInterval(tick, 1000);
+        } else if (state.isInProgress && state.isPaused) {
+            state.isPaused = false;
+            state.isPlaying = true;
         } else {
             console.error("timer has already started");
+        }
+        updateStatusBarIcons();
+    };
+
+    this.pause = () => {
+        state.isPaused = true;
+        state.isPlaying = false;
+        updateStatusBarIcons();
+    };
+
+    const tick = () => {
+        statusBar.text.show();
+        if (time.remainingLength <= 0) {
+            state.isPlaying = false;
+            state.isStopped = true;
+            this.stop();
+        } else if (state.isPlaying) {
+            time.remainingLength -= 1;
+            state.isPlaying = true;
+
+            updateStatusBarIcons();
+        } else {
+            console.log(
+                `paused remainingSecs: ${time.remainingLength} min: ${minutes} sec: ${seconds}`
+            );
         }
     };
 
     this.stop = () => {
-        clearInterval(intervalObj);
-        this.remainingSeconds = 0;
+        state.isInProgress = false;
+        state.isStopped = true;
+        clearInterval(time.intervalObject);
+        time.remainingLength = 0;
         playAlarm();
-        // console.log("timer stopped");
+        updateStatusBarIcons();
     };
+
+    this.reset = () => {
+        console.log("timer reset");
+        state.isPlaying = false;
+        state.isPaused = false;
+        state.isStopped = false;
+        state.isInProgress = false;
+        this.start();
+        updateStatusBarIcons();
+    };
+
+    const updateStatusBarIcons = () => {
+        if (state.isStopped) {
+            statusBar.resetButton.show();
+            statusBar.pauseButton.hide();
+            statusBar.playButton.hide();
+        } else if (state.isPaused) {
+            statusBar.resetButton.hide();
+            statusBar.pauseButton.hide();
+            statusBar.playButton.show();
+        } else if (state.isPlaying) {
+            statusBar.resetButton.hide();
+            statusBar.pauseButton.show();
+            statusBar.playButton.hide();
+        }
+
+        let seconds = time.remainingLength % 60;
+        let minutes = (time.remainingLength - seconds) / 60;
+        statusBar.text.text = `${minutes < 10 ? `0${minutes}` : minutes}:${
+            seconds < 10 ? `0${seconds}` : seconds
+        }`;
+    };
+
+    const createStatusBarIcons = () => {
+        statusBar.text = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Left
+        );
+
+        statusBar.playButton = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Left
+        );
+        statusBar.playButton.text = `$(debug-start)`;
+        statusBar.playButton.command = "timer.start";
+        statusBar.playButton.tooltip = "Start";
+
+        statusBar.pauseButton = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Left
+        );
+        statusBar.pauseButton.text = "$(debug-pause)";
+        statusBar.pauseButton.command = "timer.pause";
+        statusBar.pauseButton.tooltip = "Pause";
+
+        statusBar.resetButton = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Left
+        );
+        statusBar.resetButton.text = "$(debug-restart)";
+        statusBar.resetButton.command = "timer.reset";
+        statusBar.resetButton.tooltip = "Reset";
+
+        statusBar.text.show();
+
+        time.remainingLength = time.startingLength;
+        updateStatusBarIcons();
+    };
+    createStatusBarIcons();
 
     const playAlarm = () => {
         player.play(soundFilePath, player.soundSettings).then(() => {
