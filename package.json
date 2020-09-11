@@ -18,6 +18,10 @@
             {
                 "command": "timer.playSound",
                 "title": "Timer: Play Sound"
+            },
+            {
+                "command": "timer.startTimer",
+                "title": "Timer: Start"
             }
         ]
     },

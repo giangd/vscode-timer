@@ -17,15 +17,15 @@ const playerAdapter = (opts) => ({
 });
 
 const play = (filePath, soundSettings) => {
-    console.log("player.play()");
+    // console.log("player.play()");
     return new Promise((resolve, reject) => {
-        console.log("   player.play() 1");
+        // console.log("   player.play() 1");
 
         if (_isWindows) {
-            console.log("   player.play() 2");
-            console.log(`will try to use: ${_playerWindowsPath}`);
-            console.log(`with settings: ${soundSettings.winVol}`);
-            console.log(`to play: ${filePath}`);
+            // console.log("   player.play() 2");
+            // console.log(`will try to use: ${_playerWindowsPath}`);
+            // console.log(`with settings: ${soundSettings.winVol}`);
+            // console.log(`to play: ${filePath}`);
 
             cp.execFile(_playerWindowsPath, [
                 "/vol",
@@ -34,7 +34,7 @@ const play = (filePath, soundSettings) => {
             ]);
             resolve();
         } else {
-            console.log("   player.play() 3");
+            // console.log("   player.play() 3");
 
             player.play(filePath, playerAdapter(soundSettings), (err) => {
                 if (err) {
@@ -49,7 +49,7 @@ const play = (filePath, soundSettings) => {
                 resolve();
             });
         }
-        console.log("   player.play() 4");
+        // console.log("   player.play() 4");
     });
 };
 
