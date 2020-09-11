@@ -1,17 +1,16 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+"use strict";
+
 const vscode = require("vscode");
+const player = require("./player");
+const path = require("path");
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+const basePath = path.join(__dirname, ".."); // '/Projects'
+const soundFilePath = path.join(basePath, "sounds", "chime.wav");
 
-/**
- * @param {vscode.ExtensionContext} context
- */
 function activate(context) {
     let disposable = [];
     console.log('Congratulations, your extension "timer" is now active!');
-
+    console.log(`dir: ${basePath}`);
 
     disposable.push(
         vscode.commands.registerCommand("timer.playSound", function () {
@@ -19,6 +18,9 @@ function activate(context) {
 
             // Display a message box to the user
             vscode.window.showInformationMessage("Playing Sound");
+            player.play(soundFilePath, player.soundSettings).then(() => {
+                console.log("sound has played");
+            });
         })
     );
 
@@ -29,7 +31,6 @@ function activate(context) {
 }
 exports.activate = activate;
 
-// this method is called when your extension is deactivated
 function deactivate() {}
 
 module.exports = {
