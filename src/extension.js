@@ -8,39 +8,67 @@ const soundFilePath = path.join(basePath, "sounds", "chime.wav");
 function activate(context) {
     let disposable = [];
     console.log('Congratulations, your extension "timer" is now active!');
-    console.log(`dir: ${basePath}`);
 
     const timer = new Timer();
-    // timer.createStatusBarClock();
 
     const startTimerCmd = vscode.commands.registerCommand("timer.start", () => {
-        vscode.window.showInformationMessage("Timer Started");
+        // vscode.window.showInformationMessage("Timer Started");
         timer.start();
     });
 
     const pauseTimerCmd = vscode.commands.registerCommand("timer.pause", () => {
-        vscode.window.showInformationMessage("Timer Paused");
+        // vscode.window.showInformationMessage("Timer Paused");
         timer.pause();
     });
 
     const resetTimerCmd = vscode.commands.registerCommand("timer.reset", () => {
-        vscode.window.showInformationMessage("Timer Reset");
+        // vscode.window.showInformationMessage("Timer Reset");
         timer.reset();
     });
 
-    const playSoundCmd = vscode.commands.registerCommand(
-        "timer.playSound",
-        () => {
-            vscode.window.showInformationMessage("Playing Sound");
-            player.play(soundFilePath, player.soundSettings).then(() => {
-                console.log("sound has played");
-            });
-        }
-    );
+    // const playSoundCmd = vscode.commands.registerCommand(
+    //     "timer.playSound",
+    //     () => {
+    //         vscode.window.showInformationMessage("Playing Sound");
+    //         player.play(soundFilePath, player.soundSettings).then(() => {
+    //             console.log("sound has played");
+    //         });
+    //     }
+    // );
 
-    disposable.push(timer, startTimerCmd, playSoundCmd, resetTimerCmd);
+    const setTimeCmd = vscode.commands.registerCommand("timer.setTime", () => {
+        // vscode.window.showInformationMessage("Set Time");
+        vscode.window
+            .showInputBox({
+                prompt: "Set Timer Length:",
+                placeHolder: "Enter time in minutes",
+                validateInput: validateInput,
+            })
+            .then((input) => {
+                if (input) {
+                    timer.reset(parseInt(input) * 60);
+                }
+            });
+    });
+
+    disposable.push(
+        timer,
+        startTimerCmd,
+        // playSoundCmd,
+        pauseTimerCmd,
+        resetTimerCmd,
+        setTimeCmd
+    );
     for (const item of disposable) {
         context.subscriptions.push(item);
+    }
+}
+
+function validateInput(input) {
+    if (isNaN(parseInt(input))) {
+        return "Must input a number.";
+    } else {
+        return null;
     }
 }
 
@@ -50,6 +78,7 @@ function Timer() {
         isPaused: false,
         isStopped: false,
         isInProgress: false,
+        isFirstTime: false,
     };
 
     const statusBar = {
@@ -60,7 +89,7 @@ function Timer() {
     };
 
     const time = {
-        startingLength: 8,
+        startingLength: 60,
         remainingLength: undefined,
         intervalObject: undefined,
     };
@@ -70,6 +99,10 @@ function Timer() {
             state.isInProgress = true;
             state.isPlaying = true;
 
+            if (time.intervalObject) {
+                // just in case there is a previous interval
+                clearInterval(time.intervalObject);
+            }
             time.intervalObject = setInterval(tick, 1000);
         } else if (state.isInProgress && state.isPaused) {
             state.isPaused = false;
@@ -87,7 +120,6 @@ function Timer() {
     };
 
     const tick = () => {
-        statusBar.text.show();
         if (time.remainingLength <= 0) {
             state.isPlaying = false;
             state.isStopped = true;
@@ -95,13 +127,12 @@ function Timer() {
         } else if (state.isPlaying) {
             time.remainingLength -= 1;
             state.isPlaying = true;
-
-            updateStatusBarIcons();
         } else {
             console.log(
                 `paused remainingSecs: ${time.remainingLength} min: ${minutes} sec: ${seconds}`
             );
         }
+        updateStatusBarIcons();
     };
 
     this.stop = () => {
@@ -113,17 +144,36 @@ function Timer() {
         updateStatusBarIcons();
     };
 
-    this.reset = () => {
-        console.log("timer reset");
+    this.reset = (length = undefined) => {
+        if (length) {
+            time.startingLength = length;
+        }
+        console.log(`timer reset with length: ${length}`);
         state.isPlaying = false;
         state.isPaused = false;
         state.isStopped = false;
         state.isInProgress = false;
+
+        clearInterval(time.intervalObject);
+
+        time.remainingLength = time.startingLength;
         this.start();
         updateStatusBarIcons();
     };
 
     const updateStatusBarIcons = () => {
+        if (state.isFirstTime) {
+            time.remainingLength = time.startingLength;
+        }
+
+        let seconds = time.remainingLength % 60;
+        let minutes = (time.remainingLength - seconds) / 60;
+        statusBar.text.text = `${minutes < 10 ? `0${minutes}` : minutes}:${
+            seconds < 10 ? `0${seconds}` : seconds
+        }`;
+
+        statusBar.text.show();
+
         if (state.isStopped) {
             statusBar.resetButton.show();
             statusBar.pauseButton.hide();
@@ -136,13 +186,12 @@ function Timer() {
             statusBar.resetButton.hide();
             statusBar.pauseButton.show();
             statusBar.playButton.hide();
+        } else if (state.isFirstTime) {
+            state.isFirstTime = false;
+            statusBar.resetButton.hide();
+            statusBar.pauseButton.hide();
+            statusBar.playButton.show();
         }
-
-        let seconds = time.remainingLength % 60;
-        let minutes = (time.remainingLength - seconds) / 60;
-        statusBar.text.text = `${minutes < 10 ? `0${minutes}` : minutes}:${
-            seconds < 10 ? `0${seconds}` : seconds
-        }`;
     };
 
     const createStatusBarIcons = () => {
@@ -171,9 +220,7 @@ function Timer() {
         statusBar.resetButton.command = "timer.reset";
         statusBar.resetButton.tooltip = "Reset";
 
-        statusBar.text.show();
-
-        time.remainingLength = time.startingLength;
+        state.isFirstTime = true;
         updateStatusBarIcons();
     };
     createStatusBarIcons();

@@ -16,10 +16,6 @@
     "contributes": {
         "commands": [
             {
-                "command": "timer.playSound",
-                "title": "Timer: Play Sound"
-            },
-            {
                 "command": "timer.start",
                 "title": "Timer: Start"
             },
@@ -30,6 +26,10 @@
             {
                 "command": "timer.reset",
                 "title": "Timer: Reset"
+            },
+            {
+                "command": "timer.setTime",
+                "title": "Timer: Set Time"
             }
         ]
     },
