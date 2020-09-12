@@ -18,6 +18,10 @@ None yet.
 
 ## Release Notes
 
-### 1.0.0
+### 0.0.2
+
+-   Fixed images not showing on README
+
+### 0.0.1
 
 -   Initial release
