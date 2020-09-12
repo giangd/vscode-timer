@@ -1,7 +1,8 @@
 {
     "name": "timer",
     "displayName": "Timer With Alarm Sounds",
-    "description": "",
+    "description": "Set a custom timer with alarm sounds and message pop-ups",
+    "publisher": "yangduong",
     "version": "0.0.1",
     "engines": {
         "vscode": "^1.49.0"
@@ -9,6 +10,19 @@
     "categories": [
         "Other"
     ],
+    "license": "MIT",
+    "icon": "alarmClock.png",
+    "keywords": [
+        "Timer",
+        "Pomodoro",
+        "Alarm",
+        "Alert",
+        "Clock"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/giangd/vscode-timer"
+    },
     "activationEvents": [
         "*"
     ],
