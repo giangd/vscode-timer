@@ -31,7 +31,36 @@
                 "command": "timer.setTime",
                 "title": "Timer: Set Time"
             }
-        ]
+        ],
+        "configuration": {
+            "title": "Timer With Alarm Sounds",
+            "properties": {
+                "timer.defaultTimerLength": {
+                    "type": "number",
+                    "default": 1,
+                    "description": "Default timer length in minutes (applies on restart of VS Code)."
+                },
+                "timer.notifications.soundAlert": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Play an alarm sound when timer is done (applies on restart of VS Code)."
+                },
+                "timer.notifications.soundAlertSelection": {
+                    "type": "string",
+                    "default": "Chime",
+                    "description": "Change alert sound (applies on restart of VS Code).",
+                    "enum": [
+                        "Chime",
+                        "Bell"
+                    ]
+                },
+                "timer.notifications.textAlert": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show a text pop-up when timer is done (applies on restart of VS Code)."
+                }
+            }
+        }
     },
     "scripts": {
         "lint": "eslint .",

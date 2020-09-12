@@ -2,14 +2,15 @@ const vscode = require("vscode");
 const player = require("./player");
 const path = require("path");
 
-const basePath = path.join(__dirname, "..");
-const soundFilePath = path.join(basePath, "sounds", "chime.wav");
-
 function activate(context) {
     let disposable = [];
-    console.log('Congratulations, your extension "timer" is now active!');
+    // console.log('Congratulations, your extension "timer" is now active!');
 
-    const timer = new Timer();
+    const config = vscode.workspace.getConfiguration("timer");
+    // console.log("activate -> workbenchConfig", config);
+    // console.log("activate -> theme", theme);
+
+    const timer = new Timer(config);
 
     const startTimerCmd = vscode.commands.registerCommand("timer.start", () => {
         // vscode.window.showInformationMessage("Timer Started");
@@ -72,7 +73,20 @@ function validateInput(input) {
     }
 }
 
-function Timer() {
+function Timer(config) {
+    // console.log("Timer -> config", config);
+
+    const notificationConfig = config.get("notifications");
+    // console.log("Timer -> notificationSettings", notificationConfig);
+    // console.log("Timer -> notificationSettings.soundAlertSelection", notificationConfig.soundAlertSelection.toLowerCase)
+
+    const basePath = path.join(__dirname, "..");
+    const soundFilePath = path.join(
+        basePath,
+        "sounds",
+        `${notificationConfig.soundAlertSelection.toLowerCase()}.wav`
+    );
+
     const state = {
         isPlaying: false,
         isPaused: false,
@@ -89,7 +103,7 @@ function Timer() {
     };
 
     const time = {
-        startingLength: 60,
+        startingLength: config.get("defaultTimerLength") * 60,
         remainingLength: undefined,
         intervalObject: undefined,
     };
@@ -128,9 +142,10 @@ function Timer() {
             time.remainingLength -= 1;
             state.isPlaying = true;
         } else {
-            console.log(
-                `paused remainingSecs: ${time.remainingLength} min: ${minutes} sec: ${seconds}`
-            );
+            // console.log(
+            //     `paused remainingSecs: ${time.remainingLength} min: ${minutes} sec: ${seconds}`
+            // );
+
         }
         updateStatusBarIcons();
     };
@@ -140,7 +155,12 @@ function Timer() {
         state.isStopped = true;
         clearInterval(time.intervalObject);
         time.remainingLength = 0;
-        playAlarm();
+        if (notificationConfig.soundAlert) {
+            playAlarm();
+        }
+        if (notificationConfig.textAlert) {
+            vscode.window.showInformationMessage("Timer Finished");
+        }
         updateStatusBarIcons();
     };
 
@@ -148,7 +168,7 @@ function Timer() {
         if (length) {
             time.startingLength = length;
         }
-        console.log(`timer reset with length: ${length}`);
+        // console.log(`timer reset with length: ${length}`);
         state.isPlaying = false;
         state.isPaused = false;
         state.isStopped = false;
