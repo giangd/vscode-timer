@@ -3,7 +3,7 @@
     "displayName": "Timer With Alarm Sounds",
     "description": "Set a custom timer with alarm sounds and message pop-ups",
     "publisher": "yangduong",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "engines": {
         "vscode": "^1.49.0"
     },
