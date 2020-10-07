@@ -1,5 +1,7 @@
 # Timer With Alarm Sounds
 
+[Visit the VS Code marketplace to download](https://marketplace.visualstudio.com/items?itemName=YangDuong.timer)
+
 Set a custom timer with alarm sounds and message pop-ups.
 
 ![Preview](https://raw.githubusercontent.com/giangd/vscode-timer/master/statusBar.png?token=ADJSTLCPDCCO75PHQZSQU3K7MWPWW)
